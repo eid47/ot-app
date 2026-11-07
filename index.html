@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
   <title>OT TKC</title>
   
+  <!-- ⭐⭐⭐ ไอคอนจาก GitHub Pages (ต้องอยู่บรรทัดนี้เท่านั้น iOS ถึงจะอ่าน) ⭐⭐⭐ -->
   <link rel="apple-touch-icon" href="https://eid47.github.io/ot-app/icon-512.png">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -18,6 +19,7 @@
     #selectScreen { display: none; flex-direction: column; align-items: center; justify-content: center; height: 100vh; padding: 20px; }
     #selectScreen h1 { color: #0866D9; font-size: 24px; margin-bottom: 8px; }
     #selectScreen p { color: #666; margin-bottom: 40px; font-size: 14px; }
+    
     .branch-btn {
       display: flex; align-items: center; justify-content: center;
       width: 100%; max-width: 320px; padding: 20px; margin: 10px 0;
@@ -52,39 +54,21 @@
       cursor: pointer; z-index: 1000;
       box-shadow: 0 3px 8px rgba(0,0,0,0.2); display: none;
     }
-    
-    /* ⭐ Fallback Modal */
-    #fallbackModal {
-      position: fixed; top: 0; left: 0; right: 0; bottom: 0;
-      background: rgba(0,0,0,0.7); display: none;
-      align-items: center; justify-content: center;
-      z-index: 99999; padding: 20px;
-    }
-    #fallbackModal .modal-content {
-      background: #fff; border-radius: 14px; padding: 25px;
-      max-width: 400px; width: 100%; text-align: center;
-    }
-    #fallbackModal h3 { color: #dc3545; margin-top: 0; }
-    #fallbackModal .btn-direct {
-      display: block; width: 100%; padding: 14px;
-      background: #0866D9; color: #fff; border: none;
-      border-radius: 10px; font-size: 16px; font-weight: bold;
-      text-decoration: none; margin-top: 15px; cursor: pointer;
-    }
   </style>
 </head>
 <body>
 
   <script>
+    // ⚠️ ใส่ URL Apps Script ของทั้ง 2 สาขาตรงนี้
     var BRANCH_CONFIG = {
       bangplee: {
         name: "สาขาบางพลี", icon: "🟢",
-        url: "https://script.google.com/macros/s/AKfycbzMt_NF6mW7gTa729ZlgJ9zNdQ7ib74Tzwi7in8SXKJRBK-fcQShM7PhR5_xsnyeGC-/exec",  // ← ของบางพลี
+        url: "https://script.google.com/macros/s/AKfycbzMt_NF6mW7gTa729ZlgJ9zNdQ7ib74Tzwi7in8SXKJRBK-fcQShM7PhR5_xsnyeGC-/exec", 
         color: "#2ecc71"
       },
       prachin: {
         name: "สาขาปราจีนบุรี", icon: "🔵",
-        url: "https://script.google.com/macros/s/AKfycbwdujQnJupSZi02ZiOj0950gsTU1rvfDkWeXVuN8ebGcPZDgE0H78g-kBEBV468yR19/exec",  // ← ของปราจีน
+        url: "https://script.google.com/macros/s/AKfycbwdujQnJupSZi02ZiOj0950gsTU1rvfDkWeXVuN8ebGcPZDgE0H78g-kBEBV468yR19/exec", 
         color: "#3498db"
       }
     };
@@ -95,9 +79,11 @@
     <div class="loading-text" id="loadingText">⏳ กำลังโหลดระบบ...</div>
   </div>
 
+  <!-- ⭐ หน้าเลือกสาขา: ผู้ใช้ต้องกดแชร์จากหน้านี้เท่านั้นถึงจะได้ไอคอน -->
   <div id="selectScreen">
     <h1>🏢 OT TKC</h1>
-    <p>กรุณาเลือกสาขาที่ต้องการเข้าใช้งาน</p>
+    <p>กรุณาเลือกสาขาที่ต้องการเข้าใช้งาน<br><small style="color:red;">(หากต้องการ Add to Home Screen กรุณากดแชร์จากหน้านี้)</small></p>
+    
     <button class="branch-btn bangplee" onclick="selectBranch('bangplee')">
       <span style="font-size:24px;">🟢</span> สาขาบางพลี
     </button>
@@ -109,26 +95,10 @@
   <iframe id="appFrame" allow="geolocation; camera; microphone; fullscreen" allowfullscreen referrerpolicy="no-referrer-when-downgrade"></iframe>
 
   <button id="switchBranchBtn" onclick="switchBranch()">🔄 เปลี่ยนสาขา</button>
-  
-  <!-- ⭐ Fallback Modal: ถ้าโหลดไม่ขึ้น -->
-  <div id="fallbackModal">
-    <div class="modal-content">
-      <h3>⚠️ โหลดไม่สำเร็จ</h3>
-      <p>ไม่สามารถเชื่อมต่อระบบได้<br>(อาจเป็นเพราะ GitHub Pages ขัดข้อง)</p>
-      <button class="btn-direct" id="btnDirectFallback" onclick="goDirectUrl()">
-        🚀 เปิดระบบแบบ Direct URL
-      </button>
-      <button style="margin-top:10px; background:none; border:none; color:#666; cursor:pointer;" onclick="retryLoad()">
-        🔄 ลองใหม่
-      </button>
-    </div>
-  </div>
 
   <script>
     var STORAGE_KEY = 'ot_selected_branch';
     var currentBranchKey = null;
-    var loadTimeout = null;
-    var loadSuccess = false;
     
     function getSelectedBranch() {
       var params = new URLSearchParams(window.location.search);
@@ -154,57 +124,28 @@
       var config = BRANCH_CONFIG[key];
       if (!config) return;
       currentBranchKey = key;
-      loadSuccess = false;
       
+      // เช็คว่าใส่ URL หรือยัง
       if (!config.url || config.url.indexOf('URL_APPS_SCRIPT') === 0) {
-        alert('❌ ยังไม่ได้ตั้งค่า URL ของ Apps Script สาขา ' + config.name);
-        document.getElementById('selectScreen').style.display = 'flex';
+        alert('❌ ยังไม่ได้ตั้งค่า URL ของ Apps Script สาขา ' + config.name + '\nกรุณาแก้ไขไฟล์ index.html');
         return;
       }
       
+      // ซ่อนหน้าเลือก + แสดง loading
       document.getElementById('selectScreen').style.display = 'none';
       document.getElementById('loadingOverlay').style.display = 'flex';
       document.getElementById('loadingText').innerText = '⏳ กำลังโหลด ' + config.name + '...';
       document.title = config.name + ' - OT TKC';
-      
-      var themeMeta = document.querySelector('meta[name="theme-color"]');
-      if (themeMeta) themeMeta.setAttribute('content', config.color);
       
       var frame = document.getElementById('appFrame');
       frame.style.display = 'block';
       frame.src = config.url;
       
       frame.onload = function() {
-        loadSuccess = true;
-        if (loadTimeout) clearTimeout(loadTimeout);
         document.getElementById('loadingOverlay').style.display = 'none';
         document.getElementById('switchBranchBtn').style.display = 'block';
         document.getElementById('switchBranchBtn').innerText = '🔄 ' + config.name + ' (เปลี่ยน)';
       };
-      
-      // ⭐ Fallback: ถ้าโหลดไม่เสร็จใน 15 วินาที → แสดง Modal
-      loadTimeout = setTimeout(function() {
-        if (!loadSuccess) {
-          document.getElementById('loadingOverlay').style.display = 'none';
-          document.getElementById('fallbackModal').style.display = 'flex';
-        }
-      }, 15000);
-    }
-    
-    // ⭐ Fallback: ไป Direct URL
-    function goDirectUrl() {
-      var config = BRANCH_CONFIG[currentBranchKey];
-      if (config && config.url) {
-        window.top.location.href = config.url + '?direct=1';
-      }
-    }
-    
-    // ⭐ Fallback: ลองโหลดใหม่
-    function retryLoad() {
-      document.getElementById('fallbackModal').style.display = 'none';
-      var frame = document.getElementById('appFrame');
-      frame.src = 'about:blank';
-      setTimeout(function() { loadBranch(currentBranchKey); }, 100);
     }
     
     function switchBranch() {
@@ -220,10 +161,12 @@
     }
     
     (function init() {
+      // ถ้าเคยเลือกสาขาไว้ ให้โหลดเลย (ไม่ต้องเลือกใหม่)
       var branchKey = getSelectedBranch();
       if (branchKey) {
         loadBranch(branchKey);
       } else {
+        // ถ้าไม่เคยเลือก ให้โชว์หน้าเลือกสาขา
         document.getElementById('selectScreen').style.display = 'flex';
       }
     })();
